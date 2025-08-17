@@ -702,6 +702,59 @@
             margin-bottom: 0.5rem;
         }
         
+        /* Nuevos estilos para el slider */
+        .slider-container {
+            margin-top: 15px;
+            padding: 10px 0;
+        }
+        
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: var(--accent-cyan);
+            margin-top: 5px;
+        }
+        
+        .pr-slider {
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: linear-gradient(to right, #ff4d4d, #ffcc00, #00cc00);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .pr-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(90, 253, 247, 0.8);
+            border: 2px solid white;
+        }
+        
+        .pr-slider::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(90, 253, 247, 0.8);
+            border: 2px solid white;
+        }
+        
+        .pr-value-display {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 10px;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 8px rgba(90, 253, 247, 0.5);
+        }
+        
         @media (max-width: 768px) {
             #month-input-container, .result-grid, .roi-grid, .strings-config {
                 grid-template-columns: 1fr;
@@ -817,10 +870,29 @@
                         </div>
                     </div>
                     <div class="input-group"><label for="location">Zona Geográfica</label><select id="location" onchange="calcularGeneracion(); updateRecommendation()"><option value="norte">Norte</option><option value="centro" selected>Centro</option><option value="sur">Sur</option><option value="muy_soleada">Muy Soleada</option></select></div>
+                    
+                    <!-- Nuevo slider para Performance Ratio -->
                     <div class="input-group">
-                        <label for="performance-ratio">Performance Ratio (PR)</label>
-                        <input type="text" id="performance-ratio" value="85%" oninput="calcularGeneracion()" onblur="formatPerformanceRatio()" placeholder="Ej: 0.85 o 85%">
+                        <label for="performance-ratio-slider">Performance Ratio (PR)</label>
+                        <div class="slider-container">
+                            <input 
+                                type="range" 
+                                id="performance-ratio-slider" 
+                                class="pr-slider"
+                                min="1" 
+                                max="100" 
+                                value="85" 
+                                oninput="updatePerformanceRatio(this.value)"
+                            >
+                            <div class="slider-labels">
+                                <span>1%</span>
+                                <span>50%</span>
+                                <span>100%</span>
+                            </div>
+                            <div class="pr-value-display" id="pr-value">85%</div>
+                        </div>
                     </div>
+                    
                     <div class="input-group"><label for="cost-per-kw">Costo por kWp (Fijo)</label><input type="text" id="cost-per-kw" readonly></div>
                 </div>
                 
@@ -856,7 +928,7 @@
         <div class="footer">
             <p>© 2025 Super Solar - Todos los derechos reservados</p>
             <p>Datos de irradiancia solar cortesía de NASA POWER</p>
-            <p>Pagina creada por David Bustillos Chavez</p>
+            <p>Creado por David Bustillos Chavez</p>
         </div>
     </div>
 
@@ -895,27 +967,12 @@
         }
         
         function getPerformanceRatio() {
-            const input = document.getElementById('performance-ratio');
-            let valueStr = input.value.trim();
-            let pr = 0.85; // Default value
-            if (valueStr.includes('%')) {
-                let percentValue = parseFloat(valueStr.replace('%', ''));
-                if (!isNaN(percentValue)) {
-                    pr = percentValue / 100;
-                }
-            } else {
-                let decimalValue = parseFloat(valueStr);
-                if (!isNaN(decimalValue)) {
-                    pr = decimalValue > 1 ? decimalValue / 100 : decimalValue;
-                }
-            }
-            return Math.max(0, Math.min(1, pr)); // Clamp between 0 and 1
+            return parseInt(document.getElementById("performance-ratio-slider").value) / 100;
         }
 
-        function formatPerformanceRatio() {
-            const input = document.getElementById('performance-ratio');
-            const value = getPerformanceRatio();
-            input.value = `${(value * 100).toFixed(0)}%`;
+        function updatePerformanceRatio(value) {
+            document.getElementById("pr-value").textContent = value + "%";
+            calcularGeneracion();
         }
 
         function updateInverterSize() {
@@ -1279,6 +1336,7 @@
                 const autosuficiencia = document.getElementById("autosuficiencia").textContent;
                 const locationSelect = document.getElementById("location");
                 const zonaGeografica = locationSelect.options[locationSelect.selectedIndex].text;
+                const prValue = document.getElementById("performance-ratio-slider").value;
                 
                 // Factor de emisiones en México (kg CO2 por kWh)
                 const factorCO2 = 0.467;
@@ -1327,6 +1385,9 @@
                         
                         <h4>Impacto Ambiental</h4>
                         <p>Su sistema solar evitará la emisión de aproximadamente <strong>${reduccionCO2} kg de CO₂</strong> anualmente, equivalente a plantar <strong>${arbolesEquivalentes} árboles</strong>.</p>
+                        
+                        <h4>Eficiencia del Sistema</h4>
+                        <p>Su sistema está configurado con un Performance Ratio de <strong>${prValue}%</strong>. Este valor representa la eficiencia global de su instalación solar.</p>
                         
                         <h4>Recomendaciones para ${zonaGeografica}</h4>
                         <ul>${consejos}</ul>
